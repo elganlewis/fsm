@@ -104,6 +104,11 @@ var originalClick;
 
 function drawUsing(c) {
 	c.clearRect(0, 0, canvas.width, canvas.height);
+	
+	if(c instanceof CanvasRenderingContext2D) {
+		drawGrid(c);
+	}
+
 	c.save();
 	c.translate(0.5, 0.5);
 
@@ -129,6 +134,30 @@ function drawUsing(c) {
 function draw() {
 	drawUsing(canvas.getContext('2d'));
 	saveBackup();
+}
+
+function drawGrid(c) {
+	var spacing = 20;
+
+	c.save();
+	c.strokeStyle = '#e6e6e6';
+	c.lineWidth = 1;
+
+	for(var x = 0; x <= canvas.width; x += spacing) {
+		c.beginPath();
+		c.moveTo(x, 0);
+		c.lineTo(x, canvas.height);
+		c.stroke();
+	}
+
+	for(var y = 0; y <= canvas.height; y += spacing) {
+		c.beginPath();
+		c.moveTo(0, y);
+		c.lineTo(canvas.width, y);
+		c.stroke();
+	}
+
+	c.restore();
 }
 
 function selectObject(x, y) {
