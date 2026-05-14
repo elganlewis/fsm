@@ -35,8 +35,8 @@ function drawArrow(c, x, y, angle) {
 	var dy = Math.sin(angle);
 	c.beginPath();
 	c.moveTo(x, y);
-	c.lineTo(x - 8 * dx + 5 * dy, y - 8 * dy - 5 * dx);
-	c.lineTo(x - 8 * dx - 5 * dy, y - 8 * dy + 5 * dx);
+	c.lineTo(x - arrowLength * dx + arrowWidth * dy, y - arrowLength * dy - arrowWidth * dx);
+	c.lineTo(x - arrowLength * dx - arrowWidth * dy, y - arrowLength * dy + arrowWidth * dx);
 	c.fill();
 }
 
@@ -91,9 +91,14 @@ function resetCaret() {
 
 var canvas;
 var nodeRadius = 30;
+var arrowLength = 8;
+var arrowWidth = 5;
+var selfLinkOffset = 1.5;
+var selfLinkRadius = 0.75;
 var nodes = [];
 var links = [];
 
+var showGrid = true;
 var cursorVisible = true;
 var snapToPadding = 6; // pixels
 var hitTargetPadding = 6; // pixels
@@ -105,7 +110,7 @@ var originalClick;
 function drawUsing(c) {
 	c.clearRect(0, 0, canvas.width, canvas.height);
 	
-	if(c instanceof CanvasRenderingContext2D) {
+	if(showGrid && c instanceof CanvasRenderingContext2D) {
 		drawGrid(c);
 	}
 
@@ -158,6 +163,11 @@ function drawGrid(c) {
 	}
 
 	c.restore();
+}
+
+function toggleGrid(checkbox) {
+	showGrid = checkbox.checked;
+	draw();
 }
 
 function selectObject(x, y) {

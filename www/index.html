@@ -24,6 +24,18 @@ canvas {
 	margin: 10px auto;
 }
 
+.toolbar {
+	text-align: center;
+	margin: 10px auto;
+}
+
+.toolbar label, input {
+	cursor: pointer;
+	-webkit-user-select: none; /* Safari */
+  	-ms-user-select: none; /* IE 10 and IE 11 */
+  	user-select: none; /* Standard syntax */
+}
+
 a {
 	color: black;
 }
@@ -101,6 +113,7 @@ if (typeof btoa == 'undefined') {
 	<canvas id="canvas" width="800" height="600">
 		<span class="error">Your browser does not support<br>the HTML5 &lt;canvas&gt; element</span>
 	</canvas>
+	<p class="toolbar"><label><input type="checkbox" checked onchange="toggleGrid(this)"> Show grid</label></p>
 	<div>
 		<p class="center">Export as: <a href="javascript:saveAsPNG()">PNG</a> | <a href="javascript:saveAsSVG()">SVG</a> | <a href="javascript:saveAsLaTeX()">LaTeX</a></p>
 		<textarea id="output"></textarea>

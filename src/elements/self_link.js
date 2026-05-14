@@ -24,9 +24,9 @@ SelfLink.prototype.setAnchorPoint = function(x, y) {
 };
 
 SelfLink.prototype.getEndPointsAndCircle = function() {
-	var circleX = this.node.x + 1.5 * nodeRadius * Math.cos(this.anchorAngle);
-	var circleY = this.node.y + 1.5 * nodeRadius * Math.sin(this.anchorAngle);
-	var circleRadius = 0.75 * nodeRadius;
+	var circleX = this.node.x + selfLinkOffset * nodeRadius * Math.cos(this.anchorAngle);
+	var circleY = this.node.y + selfLinkOffset * nodeRadius * Math.sin(this.anchorAngle);
+	var circleRadius = selfLinkRadius * nodeRadius;
 	var startAngle = this.anchorAngle - Math.PI * 0.8;
 	var endAngle = this.anchorAngle + Math.PI * 0.8;
 	var startX = circleX + circleRadius * Math.cos(startAngle);
