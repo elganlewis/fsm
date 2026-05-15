@@ -136,8 +136,35 @@ function setScaleValue(input) {
 	}
 
 	updateSelfLinkOffset();
-	document.getElementById(input.name + 'Value').textContent = input.name == 'arrowAngle' || input.name == 'selfLinkArrowAngle' ? value + ' deg' : input.name == 'diagramScale' ? value + 'x' : value;
+	updateScaleValueOutput(input.name, value);
 	draw();
+}
+
+function isAngleScaleValue(name) {
+	return name == 'arrowAngle' || name == 'selfLinkArrowAngle';
+}
+
+function formatScaleValue(name, value, unit) {
+	if(isAngleScaleValue(name)) {
+		if(unit == 'rad') {
+			return parseFloat((value * Math.PI / 180).toFixed(3)) + ' rad';
+		}
+		return value + ' deg';
+	}
+	return name == 'diagramScale' ? value + 'x' : value;
+}
+
+function updateScaleValueOutput(name, value) {
+	var output = document.getElementById(name + 'Value');
+	var unit = output.getAttribute('data-unit') || 'deg';
+	output.textContent = formatScaleValue(name, value, unit);
+}
+
+function toggleAngleValue(output, name) {
+	var input = document.getElementsByName(name)[0];
+	var nextUnit = (output.getAttribute('data-unit') || 'deg') == 'deg' ? 'rad' : 'deg';
+	output.setAttribute('data-unit', nextUnit);
+	output.textContent = formatScaleValue(name, parseFloat(input.value), nextUnit);
 }
 
 function screenToDiagramPoint(point) {
@@ -456,8 +483,23 @@ function saveAsPNG() {
 	selectedObject = null;
 	drawUsing(canvas.getContext('2d'));
 	selectedObject = oldSelectedObject;
-	var pngData = canvas.toDataURL('image/png');
-	document.location.href = pngData;
+	draw();
+
+	canvas.toBlob(function(blob) {
+		if(!blob) {
+			alert('Could not save this FSM as a PNG.');
+			return;
+		}
+
+		var url = URL.createObjectURL(blob);
+		var link = document.createElement('a');
+		link.href = url;
+		link.download = 'fsm.png';
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
+	}, 'image/png');
 }
 
 function saveAsSVG() {

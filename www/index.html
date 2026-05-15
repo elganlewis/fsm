@@ -81,6 +81,10 @@ canvas {
 	font-variant-numeric: tabular-nums;
 }
 
+.angle-output {
+	cursor: pointer;
+}
+
 a {
 	color: black;
 }
@@ -165,14 +169,16 @@ if (typeof btoa == 'undefined') {
 			<label><span class="scale-control-heading"><span>Node radius</span><output id="nodeRadiusValue">30</output></span><input type="range" name="nodeRadius" min="10" max="80" step="1" value="30" oninput="setScaleValue(this)"></label>
 			<label><span class="scale-control-heading"><span>Arrow length</span><output id="arrowLengthValue">8</output></span><input type="range" name="arrowLength" min="2" max="30" step="0.5" value="8" oninput="setScaleValue(this)"></label>
 			<label><span class="scale-control-heading"><span>Arrow width</span><output id="arrowWidthValue">3.5</output></span><input type="range" name="arrowWidth" min="1" max="20" step="0.5" value="3.5" oninput="setScaleValue(this)"></label>
-			<label><span class="scale-control-heading"><span>Arrow angle</span><output id="arrowAngleValue">45 deg</output></span><input type="range" name="arrowAngle" min="10" max="80" step="1" value="45" oninput="setScaleValue(this)"></label>
+			<label><span class="scale-control-heading"><span>Arrow angle</span><output id="arrowAngleValue" class="angle-output" data-unit="deg" onclick="toggleAngleValue(this, 'arrowAngle')">45 deg</output></span><input type="range" name="arrowAngle" min="10" max="80" step="1" value="45" oninput="setScaleValue(this)"></label>
 			<label><span class="scale-control-heading"><span>Self-link radius</span><output id="selfLinkRadiusScaleValue">0.6</output></span><input type="range" name="selfLinkRadiusScale" min="0.2" max="1.5" step="0.05" value="0.6" oninput="setScaleValue(this)"></label>
-			<label><span class="scale-control-heading"><span>Self-link arrow angle</span><output id="selfLinkArrowAngleValue">79.2 deg</output></span><input type="range" name="selfLinkArrowAngle" min="0" max="180" step="0.5" value="79.2" oninput="setScaleValue(this)"></label>
+			<label><span class="scale-control-heading"><span>Self-link arrow angle</span><output id="selfLinkArrowAngleValue" class="angle-output" data-unit="deg" onclick="toggleAngleValue(this, 'selfLinkArrowAngle')">79.2 deg</output></span><input type="range" name="selfLinkArrowAngle" min="0" max="180" step="0.5" value="79.2" oninput="setScaleValue(this)"></label>
 			<label><span class="scale-control-heading"><span>Diagram scale</span><output id="diagramScaleValue">1x</output></span><input type="range" name="diagramScale" min="0.25" max="2" step="0.05" value="1" oninput="setScaleValue(this)"></label>
 		</div>
 	</details>
 	<div>
-		<p class="center">Export as: <a href="javascript:saveAsPNG()">PNG</a> | <a href="javascript:saveAsSVG()">SVG</a> | <a href="javascript:saveAsLaTeX()">LaTeX</a></p>
+		<p class="center">Export as: <a href="javascript:saveAsPNG()">PNG</a> | <a href="javascript:saveAsSVG()">SVG</a> | <a href="javascript:saveAsLaTeX()">LaTeX</a> | <a href="javascript:saveAsJSON()">FSM JSON</a></p>
+		<p class="center">Import: <a href="javascript:document.getElementById('json-file').click()">FSM JSON</a></p>
+		<input id="json-file" type="file" accept="application/json,.json" onchange="loadFromJSONFile(this)" style="display: none">
 		<textarea id="output"></textarea>
 		<p>The big grid above is the FSM designer.&nbsp; Here's how to use it:</p>
 		<ul>
