@@ -92,13 +92,16 @@ function resetCaret() {
 var canvas;
 var nodeRadius = 30;
 var arrowLength = 8;
-var arrowWidth = 5;
-var selfLinkOffset = 1.5;
-var selfLinkRadius = 0.75;
+var arrowWidth = 3.5;
+var arrowAngle = Math.PI / 4;
+var selfLinkRadiusScale = 0.6;
+var selfLinkArrowAngle = Math.PI * 0.44;
+var selfLinkOffset;
+var diagramScale = 1;
 var nodes = [];
 var links = [];
 
-var showGrid = true;
+var showGrid = false;
 var cursorVisible = true;
 var snapToPadding = 6; // pixels
 var hitTargetPadding = 6; // pixels
@@ -106,6 +109,43 @@ var selectedObject = null; // either a Link or a Node
 var currentLink = null; // a Link
 var movingObject = false;
 var originalClick;
+
+function updateSelfLinkOffset() {
+	var offsetRadicand = Math.max(0, 1 - Math.pow(Math.sin(arrowAngle) * selfLinkRadiusScale, 2));
+	selfLinkOffset = selfLinkRadiusScale * Math.cos(arrowAngle) + Math.sqrt(offsetRadicand);
+}
+
+updateSelfLinkOffset();
+
+function setScaleValue(input) {
+	var value = parseFloat(input.value);
+	if(input.name == 'nodeRadius') {
+		nodeRadius = value;
+	} else if(input.name == 'arrowLength') {
+		arrowLength = value;
+	} else if(input.name == 'arrowWidth') {
+		arrowWidth = value;
+	} else if(input.name == 'arrowAngle') {
+		arrowAngle = value * Math.PI / 180;
+	} else if(input.name == 'selfLinkRadiusScale') {
+		selfLinkRadiusScale = value;
+	} else if(input.name == 'selfLinkArrowAngle') {
+		selfLinkArrowAngle = value * Math.PI / 180;
+	} else if(input.name == 'diagramScale') {
+		diagramScale = value;
+	}
+
+	updateSelfLinkOffset();
+	document.getElementById(input.name + 'Value').textContent = input.name == 'arrowAngle' || input.name == 'selfLinkArrowAngle' ? value + ' deg' : input.name == 'diagramScale' ? value + 'x' : value;
+	draw();
+}
+
+function screenToDiagramPoint(point) {
+	return {
+		'x': (point.x - canvas.width / 2) / diagramScale + canvas.width / 2,
+		'y': (point.y - canvas.height / 2) / diagramScale + canvas.height / 2
+	};
+}
 
 function drawUsing(c) {
 	c.clearRect(0, 0, canvas.width, canvas.height);
@@ -115,6 +155,11 @@ function drawUsing(c) {
 	}
 
 	c.save();
+	if(c instanceof CanvasRenderingContext2D) {
+		c.translate(canvas.width / 2, canvas.height / 2);
+		c.scale(diagramScale, diagramScale);
+		c.translate(-canvas.width / 2, -canvas.height / 2);
+	}
 	c.translate(0.5, 0.5);
 
 	for(var i = 0; i < nodes.length; i++) {
@@ -394,10 +439,10 @@ function crossBrowserMousePos(e) {
 function crossBrowserRelativeMousePos(e) {
 	var element = crossBrowserElementPos(e);
 	var mouse = crossBrowserMousePos(e);
-	return {
+	return screenToDiagramPoint({
 		'x': mouse.x - element.x,
 		'y': mouse.y - element.y
-	};
+	});
 }
 
 function output(text) {
