@@ -98,6 +98,7 @@ var selfLinkRadiusScale = 0.6;
 var selfLinkArrowAngle = Math.PI * 0.44;
 var selfLinkOffset;
 var diagramScale = 1;
+var nodeFillColor = '#ececec';
 var nodes = [];
 var links = [];
 
@@ -133,6 +134,8 @@ function setScaleValue(input) {
 		selfLinkArrowAngle = value * Math.PI / 180;
 	} else if(input.name == 'diagramScale') {
 		diagramScale = value;
+	} else if(input.name == 'nodeFillColor') {
+	nodeFillColor = input.value;
 	}
 
 	updateSelfLinkOffset();

@@ -10,6 +10,22 @@ function restoreBackup() {
 	}
 }
 
+function clearCanvas() {
+	clearInterval(caretTimer);
+	caretVisible = true;
+	nodes = [];
+	links = [];
+	selectedObject = null;
+	currentLink = null;
+	movingObject = false;
+	drawUsing(canvas.getContext('2d'));
+}
+
+function restoreSavedBackup() {
+	restoreBackup();
+	draw();
+}
+
 function createBackup() {
 	var backup = {
 		'nodes': [],

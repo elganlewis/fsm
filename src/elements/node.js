@@ -18,12 +18,18 @@ Node.prototype.setAnchorPoint = function(x, y) {
 };
 
 Node.prototype.draw = function(c) {
+	var outlineColor = c.strokeStyle;
+
 	// draw the circle
 	c.beginPath();
 	c.arc(this.x, this.y, nodeRadius, 0, 2 * Math.PI, false);
+	c.fillStyle = nodeFillColor;
+	c.fill();
+	c.strokeStyle = outlineColor;
 	c.stroke();
 
 	// draw the text
+	c.fillStyle = outlineColor;
 	drawText(c, this.text, this.x, this.y, null, selectedObject == this);
 
 	// draw a double circle for an accept state
