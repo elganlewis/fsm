@@ -1,13 +1,18 @@
 // draw using this instead of a canvas and call toLaTeX() afterward
 function ExportAsLaTeX() {
 	this._points = [];
+	this._circle = null;
+	this._colorNames = {};
+	this._colorDefinitions = '';
 	this._texData = '';
 	this._scale = 0.1; // to convert pixels to document space (TikZ breaks if the numbers get too big, above 500?)
 
 	this.toLaTeX = function() {
 		return '\\documentclass[12pt]{article}\n' +
 			'\\usepackage{tikz}\n' +
+			'\\usepackage{xcolor}\n' +
 			'\n' +
+			this._colorDefinitions +
 			'\\begin{document}\n' +
 			'\n' +
 			'\\begin{center}\n' +
@@ -20,15 +25,32 @@ function ExportAsLaTeX() {
 			'\\end{document}\n';
 	};
 
+	this.toLaTeXColor = function(color) {
+		if(/^#[0-9a-f]{6}$/i.test(color)) {
+			if(!(color in this._colorNames)) {
+				var name = 'fsmcolor' + Object.keys(this._colorNames).length;
+				this._colorNames[color] = name;
+				this._colorDefinitions += '\\definecolor{' + name + '}{HTML}{' + color.substring(1).toUpperCase() + '}\n';
+			}
+			return this._colorNames[color];
+		}
+		return color;
+	};
+
 	this.beginPath = function() {
 		this._points = [];
+		this._circle = null;
 	};
 	this.arc = function(x, y, radius, startAngle, endAngle, isReversed) {
 		x *= this._scale;
 		y *= this._scale;
 		radius *= this._scale;
 		if(endAngle - startAngle == Math.PI * 2) {
-			this._texData += '\\draw [' + this.strokeStyle + '] (' + fixed(x, 3) + ',' + fixed(-y, 3) + ') circle (' + fixed(radius, 3) + ');\n';
+			this._circle = {
+				'x': x,
+				'y': y,
+				'radius': radius,
+			};
 		} else {
 			if(isReversed) {
 				var temp = startAngle;
@@ -48,7 +70,7 @@ function ExportAsLaTeX() {
 			}
 			startAngle = -startAngle;
 			endAngle = -endAngle;
-			this._texData += '\\draw [' + this.strokeStyle + '] (' + fixed(x + radius * Math.cos(startAngle), 3) + ',' + fixed(-y + radius * Math.sin(startAngle), 3) + ') arc (' + fixed(startAngle * 180 / Math.PI, 5) + ':' + fixed(endAngle * 180 / Math.PI, 5) + ':' + fixed(radius, 3) + ');\n';
+			this._texData += '\\draw [' + this.toLaTeXColor(this.strokeStyle) + '] (' + fixed(x + radius * Math.cos(startAngle), 3) + ',' + fixed(-y + radius * Math.sin(startAngle), 3) + ') arc (' + fixed(startAngle * 180 / Math.PI, 5) + ':' + fixed(endAngle * 180 / Math.PI, 5) + ':' + fixed(radius, 3) + ');\n';
 		}
 	};
 	this.moveTo = this.lineTo = function(x, y) {
@@ -57,8 +79,14 @@ function ExportAsLaTeX() {
 		this._points.push({ 'x': x, 'y': y });
 	};
 	this.stroke = function() {
+		if(this._circle != null) {
+			var circle = this._circle;
+			this._texData += '\\draw [' + this.toLaTeXColor(this.strokeStyle) + '] (' + fixed(circle.x, 3) + ',' + fixed(-circle.y, 3) + ') circle (' + fixed(circle.radius, 3) + ');\n';
+			this._circle = null;
+			return;
+		}
 		if(this._points.length == 0) return;
-		this._texData += '\\draw [' + this.strokeStyle + ']';
+		this._texData += '\\draw [' + this.toLaTeXColor(this.strokeStyle) + ']';
 		for(var i = 0; i < this._points.length; i++) {
 			var p = this._points[i];
 			this._texData += (i > 0 ? ' --' : '') + ' (' + fixed(p.x, 2) + ',' + fixed(-p.y, 2) + ')';
@@ -66,8 +94,13 @@ function ExportAsLaTeX() {
 		this._texData += ';\n';
 	};
 	this.fill = function() {
+		if(this._circle != null) {
+			var circle = this._circle;
+			this._texData += '\\fill [' + this.toLaTeXColor(this.fillStyle) + '] (' + fixed(circle.x, 3) + ',' + fixed(-circle.y, 3) + ') circle (' + fixed(circle.radius, 3) + ');\n';
+			return;
+		}
 		if(this._points.length == 0) return;
-		this._texData += '\\fill [' + this.strokeStyle + ']';
+		this._texData += '\\fill [' + this.toLaTeXColor(this.fillStyle) + ']';
 		for(var i = 0; i < this._points.length; i++) {
 			var p = this._points[i];
 			this._texData += (i > 0 ? ' --' : '') + ' (' + fixed(p.x, 2) + ',' + fixed(-p.y, 2) + ')';

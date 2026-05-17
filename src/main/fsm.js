@@ -120,6 +120,7 @@ updateSelfLinkOffset();
 
 function setScaleValue(input) {
 	var value = parseFloat(input.value);
+	var outputValue = input.value;
 	if(input.name == 'nodeRadius') {
 		nodeRadius = value;
 	} else if(input.name == 'arrowLength') {
@@ -135,11 +136,11 @@ function setScaleValue(input) {
 	} else if(input.name == 'diagramScale') {
 		diagramScale = value;
 	} else if(input.name == 'nodeFillColor') {
-	nodeFillColor = input.value;
+		nodeFillColor = input.value;
 	}
-
+	
 	updateSelfLinkOffset();
-	updateScaleValueOutput(input.name, value);
+	updateScaleValueOutput(input.name, outputValue);
 	draw();
 }
 
@@ -148,6 +149,9 @@ function isAngleScaleValue(name) {
 }
 
 function formatScaleValue(name, value, unit) {
+	if(name == 'nodeFillColor') {
+		return value;
+	}
 	if(isAngleScaleValue(name)) {
 		if(unit == 'rad') {
 			return parseFloat((value * Math.PI / 180).toFixed(3)) + ' rad';
