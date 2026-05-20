@@ -74,10 +74,16 @@ canvas {
 	display: flex;
 	justify-content: space-between;
 	gap: 8px;
+	align-items: center;
 }
 
 .scale-controls input[type="range"] {
 	width: 100%;
+}
+
+.scale-controls input[type="checkbox"] {
+	justify-self: end;
+	margin: 0;
 }
 
 .scale-controls output {
@@ -177,8 +183,8 @@ if (typeof btoa == 'undefined') {
 			<label><span class="scale-control-heading"><span>Self-link radius</span><output id="selfLinkRadiusScaleValue">0.6</output></span><input type="range" name="selfLinkRadiusScale" min="0.2" max="1.5" step="0.05" value="0.6" oninput="setScaleValue(this)"></label>
 			<label><span class="scale-control-heading"><span>Self-link arrow angle</span><output id="selfLinkArrowAngleValue" class="angle-output" data-unit="deg" onclick="toggleAngleValue(this, 'selfLinkArrowAngle')">79.2 deg</output></span><input type="range" name="selfLinkArrowAngle" min="0" max="180" step="0.5" value="79.2" oninput="setScaleValue(this)"></label>
 			<label><span class="scale-control-heading"><span>Diagram scale</span><output id="diagramScaleValue">1x</output></span><input type="range" name="diagramScale" min="0.25" max="2" step="0.05" value="1" oninput="setScaleValue(this)"></label>
-			<label><span class="scale-control-heading"><span>Node background</span><output id="nodeFillColorValue">#ececec</output></span><input type="color" name="nodeFillColor" value="#ececec" oninput="setScaleValue(this)"></label>
-			<label><span class="scale-control-heading">Circle self-link</span><input type="checkbox" unchecked onchange="toggleCircle(this)"></label>
+			<label><span class="scale-control-heading"><span>Node colour</span><output id="nodeFillColorValue">#ececec</output></span><input type="color" name="nodeFillColor" value="#ececec" oninput="setScaleValue(this)"></label>
+			<label><span class="scale-control-heading"><span>Circle self-link</span><input type="checkbox" unchecked onchange="toggleCircle(this)"></span></label>
 		</div>
 	</details>
 	<div>

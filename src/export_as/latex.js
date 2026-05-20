@@ -12,9 +12,9 @@ function ExportAsLaTeX() {
 			'\\usepackage{tikz}\n' +
 			'\\usepackage{xcolor}\n' +
 			'\n' +
-			this._colorDefinitions +
 			'\\begin{document}\n' +
 			'\n' +
+			this._colorDefinitions +
 			'\\begin{center}\n' +
 			'\\begin{tikzpicture}[scale=0.2]\n' +
 			'\\tikzstyle{every node}+=[inner sep=0pt]\n' +
@@ -72,6 +72,24 @@ function ExportAsLaTeX() {
 			endAngle = -endAngle;
 			this._texData += '\\draw [' + this.toLaTeXColor(this.strokeStyle) + '] (' + fixed(x + radius * Math.cos(startAngle), 3) + ',' + fixed(-y + radius * Math.sin(startAngle), 3) + ') arc (' + fixed(startAngle * 180 / Math.PI, 5) + ':' + fixed(endAngle * 180 / Math.PI, 5) + ':' + fixed(radius, 3) + ');\n';
 		}
+	};
+	this.ellipse = function(x, y, a, b, rotationAngle, startAngle, endAngle, anticlockwise) {
+		x *= this._scale;
+		y *= this._scale;
+		a *= this._scale;
+		b *= this._scale;
+		while (rotationAngle >= 2 * Math.PI || rotationAngle <= -2 * Math.PI) {
+			if(rotationAngle < -2*Math.PI) {
+				rotationAngle += 2*Math.PI;
+			} else if(rotationAngle > 2*Math.PI) {
+				startAngle -= 2*Math.PI;
+			}
+		}
+		ellipseCenter = '(' + fixed(x, 2) +',' + fixed(-y, 2) + ')';
+		angle = -rotationAngle * 180 / Math.PI
+		console.log('here');
+		this._texData += this._texData += '\\draw [' + this.toLaTeXColor(this.strokeStyle) + ', shift={' + ellipseCenter + '}, rotate around={' + fixed(angle, 5) + ':(0,0)}] (' + fixed(a * Math.cos(startAngle), 3) + ',' + fixed(b * Math.sin(startAngle), 3) + ') arc (' + fixed(startAngle * 180 / Math.PI, 5) + ':' + fixed(endAngle * 180 / Math.PI, 5) + ':' + fixed(a, 3) + ' and ' + fixed(b, 3) + ');\n';
+		// this._texData += '\\draw[rotate around={' + fixed(angle, 5) + ':' + ellipseCenter + '}] ' + ellipseCenter + ' ellipse (' + fixed(a, 3) + ' and ' + fixed(b, 3) + ');\n';
 	};
 	this.moveTo = this.lineTo = function(x, y) {
 		x *= this._scale;
