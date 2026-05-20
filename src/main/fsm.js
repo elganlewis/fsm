@@ -103,6 +103,7 @@ var nodes = [];
 var links = [];
 
 var showGrid = false;
+var isCircle = false;
 var cursorVisible = true;
 var snapToPadding = 6; // pixels
 var hitTargetPadding = 6; // pixels
@@ -249,6 +250,12 @@ function toggleGrid(checkbox) {
 	draw();
 }
 
+function toggleCircle(checkbox) {
+	isCircle = !isCircle;
+	updateBackup()
+	draw();
+}
+
 function selectObject(x, y) {
 	for(var i = 0; i < nodes.length; i++) {
 		if(nodes[i].containsPoint(x, y)) {
@@ -290,7 +297,11 @@ window.onload = function() {
 
 		if(selectedObject != null) {
 			if(shift && selectedObject instanceof Node) {
-				currentLink = new SelfLink(selectedObject, mouse);
+				if (isCircle) {
+					currentLink = new SelfLink(selectedObject, mouse);
+				} else {
+					currentLink = new SelfLinkEllipse(selectedObject, mouse);
+				}
 			} else {
 				movingObject = true;
 				deltaMouseX = deltaMouseY = 0;
@@ -347,7 +358,11 @@ window.onload = function() {
 				}
 			} else {
 				if(targetNode == selectedObject) {
-					currentLink = new SelfLink(selectedObject, mouse);
+					if (isCircle) {
+						currentLink = new SelfLink(selectedObject, mouse);
+					} else {
+						currentLink = new SelfLinkEllipse(selectedObject, mouse);
+					}
 				} else if(targetNode != null) {
 					currentLink = new Link(selectedObject, targetNode);
 				} else {

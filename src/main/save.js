@@ -51,6 +51,13 @@ function createBackup() {
 				'text': link.text,
 				'anchorAngle': link.anchorAngle,
 			};
+		} else if(link instanceof SelfLinkEllipse) {
+			backupLink = {
+				'type': 'SelfLinkEllipse',
+				'node': nodes.indexOf(link.node),
+				'text': link.text,
+				'anchorAngle': link.anchorAngle,
+			};
 		} else if(link instanceof StartLink) {
 			backupLink = {
 				'type': 'StartLink',
@@ -96,6 +103,10 @@ function loadBackup(backup) {
 		var link = null;
 		if(backupLink.type == 'SelfLink') {
 			link = new SelfLink(nodes[backupLink.node]);
+			link.anchorAngle = backupLink.anchorAngle;
+			link.text = backupLink.text;
+		} else if(backupLink.type == 'SelfLinkEllipse') {
+			link = new SelfLinkEllipse(nodes[backupLink.node]);
 			link.anchorAngle = backupLink.anchorAngle;
 			link.text = backupLink.text;
 		} else if(backupLink.type == 'StartLink') {
@@ -154,4 +165,58 @@ function loadFromJSONFile(input) {
 		input.value = '';
 	};
 	reader.readAsText(file);
+}
+
+function selfLinkToEllipse(backup) {
+	nodes = [];
+	links = [];
+	selectedObject = null;
+	currentLink = null;
+	for(var i = 0; i < backup.nodes.length; i++) {
+		var backupNode = backup.nodes[i];
+		var node = new Node(backupNode.x, backupNode.y);
+		node.isAcceptState = backupNode.isAcceptState;
+		node.text = backupNode.text;
+		nodes.push(node);
+	}
+
+	for(var i = 0; i < backup.links.length; i++) {
+		var backupLink = backup.links[i];
+		var link = null;
+		if((backupLink.type == 'SelfLink' || backupLink.type == 'SelfLinkEllipse')  && isCircle) {
+			link = new SelfLink(nodes[backupLink.node]);
+			link.anchorAngle = backupLink.anchorAngle;
+			link.text = backupLink.text;
+		} else if(backupLink.type == 'SelfLink' || backupLink.type == 'SelfLinkEllipse') {
+			link = new SelfLinkEllipse(nodes[backupLink.node]);
+			link.anchorAngle = backupLink.anchorAngle;
+			link.text = backupLink.text;
+		} else if(backupLink.type == 'StartLink') {
+			link = new StartLink(nodes[backupLink.node]);
+			link.deltaX = backupLink.deltaX;
+			link.deltaY = backupLink.deltaY;
+			link.text = backupLink.text;
+		} else if(backupLink.type == 'Link') {
+			link = new Link(nodes[backupLink.nodeA], nodes[backupLink.nodeB]);
+			link.parallelPart = backupLink.parallelPart;
+			link.perpendicularPart = backupLink.perpendicularPart;
+			link.text = backupLink.text;
+			link.lineAngleAdjust = backupLink.lineAngleAdjust;
+		}
+		if(link != null) {
+			links.push(link);
+		}
+	}
+}
+
+function updateBackup() {
+	if(!localStorage || !JSON) {
+		return;
+	}
+
+	try {
+		selfLinkToEllipse(JSON.parse(localStorage['fsm']));
+	} catch(e) {
+		localStorage['fsm'] = '';
+	}
 }

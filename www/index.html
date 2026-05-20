@@ -178,6 +178,7 @@ if (typeof btoa == 'undefined') {
 			<label><span class="scale-control-heading"><span>Self-link arrow angle</span><output id="selfLinkArrowAngleValue" class="angle-output" data-unit="deg" onclick="toggleAngleValue(this, 'selfLinkArrowAngle')">79.2 deg</output></span><input type="range" name="selfLinkArrowAngle" min="0" max="180" step="0.5" value="79.2" oninput="setScaleValue(this)"></label>
 			<label><span class="scale-control-heading"><span>Diagram scale</span><output id="diagramScaleValue">1x</output></span><input type="range" name="diagramScale" min="0.25" max="2" step="0.05" value="1" oninput="setScaleValue(this)"></label>
 			<label><span class="scale-control-heading"><span>Node background</span><output id="nodeFillColorValue">#ececec</output></span><input type="color" name="nodeFillColor" value="#ececec" oninput="setScaleValue(this)"></label>
+			<label><span class="scale-control-heading">Circle self-link</span><input type="checkbox" unchecked onchange="toggleCircle(this)"></label>
 		</div>
 	</details>
 	<div>
