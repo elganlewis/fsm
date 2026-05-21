@@ -38,7 +38,7 @@ SelfLinkEllipse.prototype.getEndPointsAndEllipse = function() {
     var ellipseCenterX = this.node.x + ellipseCenterDist * Math.cos(this.anchorAngle);
 	var ellipseCenterY = this.node.y + ellipseCenterDist * Math.sin(this.anchorAngle);
 	var t = Math.acos((X-ellipseCenterDist)/a)
-	var beta = -2*Math.atan(Y/X) + this.anchorAngle;
+	var beta = arrowSide*Math.atan(Y/X) + this.anchorAngle;
 	var endX = this.node.x + X * Math.cos(beta)-Y*Math.sin(beta);
 	var endY = this.node.y + X * Math.sin(beta) + Y * Math.cos(beta);
 	return {

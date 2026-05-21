@@ -102,19 +102,74 @@ var nodeFillColor = '#ececec';
 var nodes = [];
 var links = [];
 
+var arrowSide = -2;
 var showGrid = false;
 var isCircle = false;
 var cursorVisible = true;
 var snapToPadding = 6; // pixels
 var hitTargetPadding = 6; // pixels
-var selectedObject = null; // either a Link or a Node
+var selectedObject = null; // either a Link, a Node, or a Selection
 var currentLink = null; // a Link
 var movingObject = false;
 var originalClick;
 
+function Selection() {
+	this.nodes = nodes.slice();
+	this.links = links.slice();
+	this.nodeStartPositions = [];
+	this.mouseStartX = 0;
+	this.mouseStartY = 0;
+}
+
+Selection.prototype.containsObject = function(object) {
+	for(var i = 0; i < this.nodes.length; i++) {
+		if(this.nodes[i] == object) return true;
+	}
+	for(var i = 0; i < this.links.length; i++) {
+		if(this.links[i] == object) return true;
+	}
+	return false;
+};
+
+Selection.prototype.setMouseStart = function(x, y) {
+	this.mouseStartX = x;
+	this.mouseStartY = y;
+	this.nodeStartPositions = [];
+	for(var i = 0; i < this.nodes.length; i++) {
+		this.nodeStartPositions.push({
+			'node': this.nodes[i],
+			'x': this.nodes[i].x,
+			'y': this.nodes[i].y
+		});
+	}
+};
+
+Selection.prototype.setAnchorPoint = function(x, y) {
+	var dx = x - this.mouseStartX;
+	var dy = y - this.mouseStartY;
+	for(var i = 0; i < this.nodeStartPositions.length; i++) {
+		var start = this.nodeStartPositions[i];
+		start.node.x = start.x + dx;
+		start.node.y = start.y + dy;
+	}
+};
+
+function isObjectSelected(object) {
+	return selectedObject == object || (selectedObject instanceof Selection && selectedObject.containsObject(object));
+}
+
 function updateSelfLinkOffset() {
 	var offsetRadicand = Math.max(0, 1 - Math.pow(Math.sin(arrowAngle) * selfLinkRadiusScale, 2));
 	selfLinkOffset = selfLinkRadiusScale * Math.cos(arrowAngle) + Math.sqrt(offsetRadicand);
+}
+
+function changeArrowSide() {
+	if (arrowSide == 0) {
+		arrowSide = -2;
+	} else {
+		arrowSide = 0;
+	}
+	draw();
 }
 
 updateSelfLinkOffset();
@@ -199,12 +254,12 @@ function drawUsing(c) {
 
 	for(var i = 0; i < nodes.length; i++) {
 		c.lineWidth = 1;
-		c.fillStyle = c.strokeStyle = (nodes[i] == selectedObject) ? 'blue' : 'black';
+		c.fillStyle = c.strokeStyle = isObjectSelected(nodes[i]) ? 'blue' : 'black';
 		nodes[i].draw(c);
 	}
 	for(var i = 0; i < links.length; i++) {
 		c.lineWidth = 1;
-		c.fillStyle = c.strokeStyle = (links[i] == selectedObject) ? 'blue' : 'black';
+		c.fillStyle = c.strokeStyle = isObjectSelected(links[i]) ? 'blue' : 'black';
 		links[i].draw(c);
 	}
 	if(currentLink != null) {
@@ -291,7 +346,10 @@ window.onload = function() {
 
 	canvas.onmousedown = function(e) {
 		var mouse = crossBrowserRelativeMousePos(e);
-		selectedObject = selectObject(mouse.x, mouse.y);
+		var clickedObject = selectObject(mouse.x, mouse.y);
+		if(!(selectedObject instanceof Selection && selectedObject.containsObject(clickedObject))) {
+			selectedObject = clickedObject;
+		}
 		movingObject = false;
 		originalClick = mouse;
 
@@ -406,6 +464,13 @@ document.onkeydown = function(e) {
 	} else if(!canvasHasFocus()) {
 		// don't read keystrokes when other things have focus
 		return true;
+	} else if(key == 65 && (e.ctrlKey || e.metaKey)) { // ctrl/cmd + A
+		if(nodes.length > 0 || links.length > 0) {
+			selectedObject = new Selection();
+			resetCaret();
+			draw();
+		}
+		return false;
 	} else if(key == 8) { // backspace key
 		if(selectedObject != null && 'text' in selectedObject) {
 			selectedObject.text = selectedObject.text.substr(0, selectedObject.text.length - 1);
@@ -417,14 +482,19 @@ document.onkeydown = function(e) {
 		return false;
 	} else if(key == 46) { // delete key
 		if(selectedObject != null) {
-			for(var i = 0; i < nodes.length; i++) {
-				if(nodes[i] == selectedObject) {
-					nodes.splice(i--, 1);
+			if(selectedObject instanceof Selection) {
+				nodes = [];
+				links = [];
+			} else {
+				for(var i = 0; i < nodes.length; i++) {
+					if(nodes[i] == selectedObject) {
+						nodes.splice(i--, 1);
+					}
 				}
-			}
-			for(var i = 0; i < links.length; i++) {
-				if(links[i] == selectedObject || links[i].node == selectedObject || links[i].nodeA == selectedObject || links[i].nodeB == selectedObject) {
-					links.splice(i--, 1);
+				for(var i = 0; i < links.length; i++) {
+					if(links[i] == selectedObject || links[i].node == selectedObject || links[i].nodeA == selectedObject || links[i].nodeB == selectedObject) {
+						links.splice(i--, 1);
+					}
 				}
 			}
 			selectedObject = null;

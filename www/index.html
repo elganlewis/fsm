@@ -185,6 +185,7 @@ if (typeof btoa == 'undefined') {
 			<label><span class="scale-control-heading"><span>Diagram scale</span><output id="diagramScaleValue">1x</output></span><input type="range" name="diagramScale" min="0.25" max="2" step="0.05" value="1" oninput="setScaleValue(this)"></label>
 			<label><span class="scale-control-heading"><span>Node colour</span><output id="nodeFillColorValue">#ececec</output></span><input type="color" name="nodeFillColor" value="#ececec" oninput="setScaleValue(this)"></label>
 			<label><span class="scale-control-heading"><span>Circle self-link</span><input type="checkbox" unchecked onchange="toggleCircle(this)"></span></label>
+			<label><span class="scale-control-heading"><span>Swap self-link arrow side</span><input type="button" onclick="changeArrowSide()" value="Swap"></span></label>
 		</div>
 	</details>
 	<div>
@@ -197,6 +198,7 @@ if (typeof btoa == 'undefined') {
 			<li><b>Add a state:</b> double-click on the canvas</li>
 			<li><b>Add an arrow:</b> shift-drag on the canvas</li>
 			<li><b>Move something:</b> drag it around</li>
+			<li><b>Move everything:</b> press Ctrl+A (or Cmd+A), then drag the diagram</li>
 			<li><b>Delete something:</b> click it and press the delete key (not the backspace key)</li>
 		</ul><ul>
 			<li><b>Make accept state:</b> double-click on an existing state</li>
