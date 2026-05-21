@@ -36,6 +36,7 @@ function drawArrow(c, x, y, angle) {
 	c.beginPath();
 	c.moveTo(x, y);
 	c.lineTo(x - arrowLength * dx + arrowWidth * dy, y - arrowLength * dy - arrowWidth * dx);
+	c.lineTo(x- 7*arrowLength/8 * dx, y - 7*arrowLength/8 * dy)
 	c.lineTo(x - arrowLength * dx - arrowWidth * dy, y - arrowLength * dy + arrowWidth * dx);
 	c.fill();
 }
@@ -570,6 +571,17 @@ function output(text) {
 	element.value = text;
 }
 
+function texDataSnippet(texData) {
+	var start = texData.indexOf('\\definecolor');
+	var endMarker = '\\end{center}';
+	var end = texData.indexOf(endMarker);
+
+	if(start == -1 || end == -1) {
+		return texData;
+	}
+	return texData.substring(start, end + endMarker.length);
+}
+
 function saveAsPNG() {
 	var oldSelectedObject = selectedObject;
 	selectedObject = null;
@@ -614,4 +626,8 @@ function saveAsLaTeX() {
 	selectedObject = oldSelectedObject;
 	var texData = exporter.toLaTeX();
 	output(texData);
+	var snippet = texDataSnippet(texData);
+	
+	// Copy the text to clipboard
+	navigator.clipboard.writeText(snippet);
 }
