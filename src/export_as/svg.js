@@ -10,7 +10,7 @@ function ExportAsSVG() {
 	this._transY = 0;
 
 	this.toSVG = function() {
-		return '<?xml version="1.0" standalone="no"?>\n<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n\n<svg width="800" height="600" version="1.1" xmlns="http://www.w3.org/2000/svg">\n' + this._svgData + '</svg>\n';
+		return '<?xml version="1.0" standalone="no"?>\n<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n\n<svg width="800" height="600" version="1.1" xmlns="http://www.w3.org/2000/svg">\n\t<rect width="100%" height="100%" fill="white"/>\n' + this._svgData + '</svg>\n';
 	};
 
 	this.beginPath = function() {
@@ -50,6 +50,45 @@ function ExportAsSVG() {
 			this._svgData += fixed(endX, 3) + ',' + fixed(endY, 3); // endPoint(endX, endY)
 			this._svgData += '"/>\n';
 		}
+	};
+	this.ellipse = function(x, y, radiusX, radiusY, rotationAngle, startAngle, endAngle, isReversed) {
+		x += this._transX;
+		y += this._transY;
+		var style = 'stroke="' + this.strokeStyle + '" stroke-width="' + this.lineWidth + '" fill="none"';
+		var rotationDegrees = rotationAngle * 180 / Math.PI;
+
+		if(Math.abs(endAngle - startAngle) == Math.PI * 2) {
+			this._svgData += '\t<ellipse ' + style + ' cx="' + fixed(x, 3) + '" cy="' + fixed(y, 3) + '" rx="' + fixed(radiusX, 3) + '" ry="' + fixed(radiusY, 3) + '" transform="rotate(' + fixed(rotationDegrees, 3) + ' ' + fixed(x, 3) + ' ' + fixed(y, 3) + ')"/>\n';
+			return;
+		}
+
+		if(isReversed) {
+			var temp = startAngle;
+			startAngle = endAngle;
+			endAngle = temp;
+		}
+
+		if(endAngle < startAngle) {
+			endAngle += Math.PI * 2;
+		}
+
+		var cosRotation = Math.cos(rotationAngle);
+		var sinRotation = Math.sin(rotationAngle);
+		var startX = x + radiusX * Math.cos(startAngle) * cosRotation - radiusY * Math.sin(startAngle) * sinRotation;
+		var startY = y + radiusX * Math.cos(startAngle) * sinRotation + radiusY * Math.sin(startAngle) * cosRotation;
+		var endX = x + radiusX * Math.cos(endAngle) * cosRotation - radiusY * Math.sin(endAngle) * sinRotation;
+		var endY = y + radiusX * Math.cos(endAngle) * sinRotation + radiusY * Math.sin(endAngle) * cosRotation;
+		var useGreaterThan180 = (Math.abs(endAngle - startAngle) > Math.PI);
+		var goInPositiveDirection = 1;
+
+		this._svgData += '\t<path ' + style + ' d="';
+		this._svgData += 'M ' + fixed(startX, 3) + ',' + fixed(startY, 3) + ' ';
+		this._svgData += 'A ' + fixed(radiusX, 3) + ',' + fixed(radiusY, 3) + ' ';
+		this._svgData += fixed(rotationDegrees, 3) + ' ';
+		this._svgData += +useGreaterThan180 + ' ';
+		this._svgData += +goInPositiveDirection + ' ';
+		this._svgData += fixed(endX, 3) + ',' + fixed(endY, 3);
+		this._svgData += '"/>\n';
 	};
 	this.moveTo = this.lineTo = function(x, y) {
 		x += this._transX;
