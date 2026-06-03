@@ -87,8 +87,7 @@ function ExportAsLaTeX() {
 		}
 		ellipseCenter = '(' + fixed(x, 2) +',' + fixed(-y, 2) + ')';
 		angle = -rotationAngle * 180 / Math.PI
-		console.log('here');
-		this._texData += this._texData += '\\draw [' + this.toLaTeXColor(this.strokeStyle) + ', shift={' + ellipseCenter + '}, rotate around={' + fixed(angle, 5) + ':(0,0)}] (' + fixed(a * Math.cos(startAngle), 3) + ',' + fixed(b * Math.sin(startAngle), 3) + ') arc (' + fixed(startAngle * 180 / Math.PI, 5) + ':' + fixed(endAngle * 180 / Math.PI, 5) + ':' + fixed(a, 3) + ' and ' + fixed(b, 3) + ');\n';
+		this._texData += '\\draw [' + this.toLaTeXColor(this.strokeStyle) + ', shift={' + ellipseCenter + '}, rotate around={' + fixed(angle, 5) + ':(0,0)}] (' + fixed(a * Math.cos(startAngle), 3) + ',' + fixed(b * Math.sin(startAngle), 3) + ') arc (' + fixed(startAngle * 180 / Math.PI, 5) + ':' + fixed(endAngle * 180 / Math.PI, 5) + ':' + fixed(a, 3) + ' and ' + fixed(b, 3) + ');\n';
 		// this._texData += '\\draw[rotate around={' + fixed(angle, 5) + ':' + ellipseCenter + '}] ' + ellipseCenter + ' ellipse (' + fixed(a, 3) + ' and ' + fixed(b, 3) + ');\n';
 	};
 	this.moveTo = this.lineTo = function(x, y) {
