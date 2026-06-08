@@ -24,11 +24,11 @@ SelfLink.prototype.setAnchorPoint = function(x, y) {
 };
 
 SelfLink.prototype.getEndPointsAndCircle = function() {
-	var circleX = this.node.x + 1.5 * nodeRadius * Math.cos(this.anchorAngle);
-	var circleY = this.node.y + 1.5 * nodeRadius * Math.sin(this.anchorAngle);
-	var circleRadius = 0.75 * nodeRadius;
-	var startAngle = this.anchorAngle - Math.PI * 0.8;
-	var endAngle = this.anchorAngle + Math.PI * 0.8;
+	var circleX = this.node.x + selfLinkOffset * nodeRadius * Math.cos(this.anchorAngle);
+	var circleY = this.node.y + selfLinkOffset * nodeRadius * Math.sin(this.anchorAngle);
+	var circleRadius = selfLinkRadiusScale * nodeRadius;
+	var startAngle = this.anchorAngle - (Math.PI - arrowAngle);
+	var endAngle = this.anchorAngle + (Math.PI - arrowAngle);
 	var startX = circleX + circleRadius * Math.cos(startAngle);
 	var startY = circleY + circleRadius * Math.sin(startAngle);
 	var endX = circleX + circleRadius * Math.cos(endAngle);
@@ -58,7 +58,7 @@ SelfLink.prototype.draw = function(c) {
 	var textY = stuff.circleY + stuff.circleRadius * Math.sin(this.anchorAngle);
 	drawText(c, this.text, textX, textY, this.anchorAngle, selectedObject == this);
 	// draw the head of the arrow
-	drawArrow(c, stuff.endX, stuff.endY, stuff.endAngle + Math.PI * 0.4);
+	drawArrow(c, stuff.endX, stuff.endY, stuff.endAngle + selfLinkArrowAngle);
 };
 
 SelfLink.prototype.containsPoint = function(x, y) {

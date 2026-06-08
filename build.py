@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-import os, time, sys
+import os, time, sys, datetime
 
 def sources():
 	path = './src/'
@@ -8,10 +8,10 @@ def sources():
 
 def build():
 	path = './www/fsm.js'
-	data = '\n'.join(open(file, 'r').read() for file in sources())
+	data = '\n'.join(open(file, 'r', encoding='utf-8').read() for file in sources())
 	with open(path, 'w') as f:
 		f.write(data)
-	print 'built %s (%u bytes)' % (path, len(data))
+	print(f'built {path} ({len(data)} bytes) at {datetime.datetime.now()}')
 
 def stat():
 	return [os.stat(file).st_mtime for file in sources()]

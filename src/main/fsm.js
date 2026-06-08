@@ -35,8 +35,9 @@ function drawArrow(c, x, y, angle) {
 	var dy = Math.sin(angle);
 	c.beginPath();
 	c.moveTo(x, y);
-	c.lineTo(x - 8 * dx + 5 * dy, y - 8 * dy - 5 * dx);
-	c.lineTo(x - 8 * dx - 5 * dy, y - 8 * dy + 5 * dx);
+	c.lineTo(x - arrowLength * dx + arrowWidth * dy, y - arrowLength * dy - arrowWidth * dx);
+	c.lineTo(x- 7*arrowLength/8 * dx, y - 7*arrowLength/8 * dy)
+	c.lineTo(x - arrowLength * dx - arrowWidth * dy, y - arrowLength * dy + arrowWidth * dx);
 	c.fill();
 }
 
@@ -91,30 +92,247 @@ function resetCaret() {
 
 var canvas;
 var nodeRadius = 30;
+var arrowLength = 8;
+var arrowWidth = 3.5;
+var arrowAngle = Math.PI / 4;
+var selfLinkRadiusScale = 0.6;
+var selfLinkArrowAngle = Math.PI * 0.44;
+var selfLinkOffset;
+var diagramScale = 1;
+var nodeFillColor = '#ececec';
 var nodes = [];
 var links = [];
 
+var arrowSide = -2;
+var showGrid = false;
+var isCircle = false;
 var cursorVisible = true;
 var snapToPadding = 6; // pixels
 var hitTargetPadding = 6; // pixels
-var selectedObject = null; // either a Link or a Node
+var selectedObject = null; // either a Link, a Node, or a Selection
 var currentLink = null; // a Link
 var movingObject = false;
 var originalClick;
 
+// Event Listeners
+document.addEventListener("DOMContentLoaded", function() {
+	// Toggle Grid
+	const grid = document.getElementById("toggleGrid");
+	if (grid) {grid.addEventListener("change", e => toggleGrid(e.target));}
+
+	// Clear Canvas
+	const clearCanv = document.getElementById("clearCanvasBtn");
+	if (clearCanv) {clearCanv.addEventListener("click", clearCanvas);};
+  	
+	// Restore Backup
+	const restBack = document.getElementById("restoreBackupBtn");
+	if (restBack) {restBack.addEventListener("click", restoreSavedBackup);};
+
+	// Angle Values
+	document.getElementById("selfLinkArrowAngleValue").addEventListener(
+		"click", e => toggleAngleValue(e.target, "selfLinkArrowAngle")
+	);
+	document.getElementById("arrowAngleValue").addEventListener(
+		"click", e => toggleAngleValue(e.target, "arrowAngle")
+	);
+
+	// Arrow Side
+	document.getElementById("arrowAngleValue").addEventListener("click", changeArrowSide);
+
+	// Circle Self Link
+	document.getElementById("circleSelfLink").addEventListener(
+		"change", e => toggleCircle(e.target)
+	);
+
+	const sliders = [
+		"nodeRadius",
+		"arrowLength",
+		"arrowWidth",
+		"arrowAngle",
+		"selfLinkRadiusScale",
+		"selfLinkArrowAngle",
+		"diagramScale",
+		"nodeFillColor"
+	];
+
+	sliders.forEach(setSliderListener);
+
+	// Save As
+	const saveAsTypes = {
+		"savePng": saveAsPNG,
+		"saveSvg": saveAsSVG,
+		"saveLatex": saveAsLaTeX,
+		"saveJson": saveAsJSON
+	};
+
+	for (const [key, fn] of Object.entries(saveAsTypes)) {
+		document.getElementById(key).addEventListener("click", fn);
+	};
+
+	// imports
+	document.getElementById("json-file").addEventListener("change", e => loadFromJSONFile(e.target));
+	document.getElementById("importBtn").addEventListener(
+		"click",
+		function() {
+			document.getElementById("json-file").click();
+		}
+	)
+
+});
+
+function setSliderListener(name) {
+	document.getElementsByName(name).forEach(input => {
+		input.addEventListener("input", e => setScaleValue(e.target));
+	});
+}
+
+function Selection() {
+	this.nodes = nodes.slice();
+	this.links = links.slice();
+	this.nodeStartPositions = [];
+	this.mouseStartX = 0;
+	this.mouseStartY = 0;
+}
+
+Selection.prototype.containsObject = function(object) {
+	for(var i = 0; i < this.nodes.length; i++) {
+		if(this.nodes[i] == object) return true;
+	}
+	for(var i = 0; i < this.links.length; i++) {
+		if(this.links[i] == object) return true;
+	}
+	return false;
+};
+
+Selection.prototype.setMouseStart = function(x, y) {
+	this.mouseStartX = x;
+	this.mouseStartY = y;
+	this.nodeStartPositions = [];
+	for(var i = 0; i < this.nodes.length; i++) {
+		this.nodeStartPositions.push({
+			'node': this.nodes[i],
+			'x': this.nodes[i].x,
+			'y': this.nodes[i].y
+		});
+	}
+};
+
+Selection.prototype.setAnchorPoint = function(x, y) {
+	var dx = x - this.mouseStartX;
+	var dy = y - this.mouseStartY;
+	for(var i = 0; i < this.nodeStartPositions.length; i++) {
+		var start = this.nodeStartPositions[i];
+		start.node.x = start.x + dx;
+		start.node.y = start.y + dy;
+	}
+};
+
+function isObjectSelected(object) {
+	return selectedObject == object || (selectedObject instanceof Selection && selectedObject.containsObject(object));
+}
+
+function updateSelfLinkOffset() {
+	var offsetRadicand = Math.max(0, 1 - Math.pow(Math.sin(arrowAngle) * selfLinkRadiusScale, 2));
+	selfLinkOffset = selfLinkRadiusScale * Math.cos(arrowAngle) + Math.sqrt(offsetRadicand);
+}
+
+function changeArrowSide() {
+	if (arrowSide == 0) {
+		arrowSide = -2;
+	} else {
+		arrowSide = 0;
+	}
+	draw();
+}
+
+updateSelfLinkOffset();
+
+function setScaleValue(input) {
+	var value = parseFloat(input.value);
+	var outputValue = input.value;
+	if(input.name == 'nodeRadius') {
+		nodeRadius = value;
+	} else if(input.name == 'arrowLength') {
+		arrowLength = value;
+	} else if(input.name == 'arrowWidth') {
+		arrowWidth = value;
+	} else if(input.name == 'arrowAngle') {
+		arrowAngle = value * Math.PI / 180;
+	} else if(input.name == 'selfLinkRadiusScale') {
+		selfLinkRadiusScale = value;
+	} else if(input.name == 'selfLinkArrowAngle') {
+		selfLinkArrowAngle = value * Math.PI / 180;
+	} else if(input.name == 'diagramScale') {
+		diagramScale = value;
+	} else if(input.name == 'nodeFillColor') {
+		nodeFillColor = input.value;
+	}
+	
+	updateSelfLinkOffset();
+	updateScaleValueOutput(input.name, outputValue);
+	draw();
+}
+
+function isAngleScaleValue(name) {
+	return name == 'arrowAngle' || name == 'selfLinkArrowAngle';
+}
+
+function formatScaleValue(name, value, unit) {
+	if(name == 'nodeFillColor') {
+		return value;
+	}
+	if(isAngleScaleValue(name)) {
+		if(unit == 'rad') {
+			return parseFloat((value * Math.PI / 180).toFixed(3)) + ' rad';
+		}
+		return value + ' deg';
+	}
+	return name == 'diagramScale' ? value + 'x' : value;
+}
+
+function updateScaleValueOutput(name, value) {
+	var output = document.getElementById(name + 'Value');
+	var unit = output.getAttribute('data-unit') || 'deg';
+	output.textContent = formatScaleValue(name, value, unit);
+}
+
+function toggleAngleValue(output, name) {
+	var input = document.getElementsByName(name)[0];
+	var nextUnit = (output.getAttribute('data-unit') || 'deg') == 'deg' ? 'rad' : 'deg';
+	output.setAttribute('data-unit', nextUnit);
+	output.textContent = formatScaleValue(name, parseFloat(input.value), nextUnit);
+}
+
+function screenToDiagramPoint(point) {
+	return {
+		'x': (point.x - canvas.width / 2) / diagramScale + canvas.width / 2,
+		'y': (point.y - canvas.height / 2) / diagramScale + canvas.height / 2
+	};
+}
+
 function drawUsing(c) {
 	c.clearRect(0, 0, canvas.width, canvas.height);
+	
+	if(showGrid && c instanceof CanvasRenderingContext2D) {
+		drawGrid(c);
+	}
+
 	c.save();
+	if(c instanceof CanvasRenderingContext2D) {
+		c.translate(canvas.width / 2, canvas.height / 2);
+		c.scale(diagramScale, diagramScale);
+		c.translate(-canvas.width / 2, -canvas.height / 2);
+	}
 	c.translate(0.5, 0.5);
 
 	for(var i = 0; i < nodes.length; i++) {
 		c.lineWidth = 1;
-		c.fillStyle = c.strokeStyle = (nodes[i] == selectedObject) ? 'blue' : 'black';
+		c.fillStyle = c.strokeStyle = isObjectSelected(nodes[i]) ? 'blue' : 'black';
 		nodes[i].draw(c);
 	}
 	for(var i = 0; i < links.length; i++) {
 		c.lineWidth = 1;
-		c.fillStyle = c.strokeStyle = (links[i] == selectedObject) ? 'blue' : 'black';
+		c.fillStyle = c.strokeStyle = isObjectSelected(links[i]) ? 'blue' : 'black';
 		links[i].draw(c);
 	}
 	if(currentLink != null) {
@@ -129,6 +347,41 @@ function drawUsing(c) {
 function draw() {
 	drawUsing(canvas.getContext('2d'));
 	saveBackup();
+}
+
+function drawGrid(c) {
+	var spacing = 20;
+
+	c.save();
+	c.strokeStyle = '#e6e6e6';
+	c.lineWidth = 1;
+
+	for(var x = 0; x <= canvas.width; x += spacing) {
+		c.beginPath();
+		c.moveTo(x, 0);
+		c.lineTo(x, canvas.height);
+		c.stroke();
+	}
+
+	for(var y = 0; y <= canvas.height; y += spacing) {
+		c.beginPath();
+		c.moveTo(0, y);
+		c.lineTo(canvas.width, y);
+		c.stroke();
+	}
+
+	c.restore();
+}
+
+function toggleGrid(checkbox) {
+	showGrid = checkbox.checked;
+	draw();
+}
+
+function toggleCircle(checkbox) {
+	isCircle = !isCircle;
+	updateBackup()
+	draw();
 }
 
 function selectObject(x, y) {
@@ -166,13 +419,20 @@ window.onload = function() {
 
 	canvas.onmousedown = function(e) {
 		var mouse = crossBrowserRelativeMousePos(e);
-		selectedObject = selectObject(mouse.x, mouse.y);
+		var clickedObject = selectObject(mouse.x, mouse.y);
+		if(!(selectedObject instanceof Selection && selectedObject.containsObject(clickedObject))) {
+			selectedObject = clickedObject;
+		}
 		movingObject = false;
 		originalClick = mouse;
 
 		if(selectedObject != null) {
 			if(shift && selectedObject instanceof Node) {
-				currentLink = new SelfLink(selectedObject, mouse);
+				if (isCircle) {
+					currentLink = new SelfLink(selectedObject, mouse);
+				} else {
+					currentLink = new SelfLinkEllipse(selectedObject, mouse);
+				}
 			} else {
 				movingObject = true;
 				deltaMouseX = deltaMouseY = 0;
@@ -229,7 +489,11 @@ window.onload = function() {
 				}
 			} else {
 				if(targetNode == selectedObject) {
-					currentLink = new SelfLink(selectedObject, mouse);
+					if (isCircle) {
+						currentLink = new SelfLink(selectedObject, mouse);
+					} else {
+						currentLink = new SelfLinkEllipse(selectedObject, mouse);
+					}
 				} else if(targetNode != null) {
 					currentLink = new Link(selectedObject, targetNode);
 				} else {
@@ -273,6 +537,13 @@ document.onkeydown = function(e) {
 	} else if(!canvasHasFocus()) {
 		// don't read keystrokes when other things have focus
 		return true;
+	} else if(key == 65 && (e.ctrlKey || e.metaKey)) { // ctrl/cmd + A
+		if(nodes.length > 0 || links.length > 0) {
+			selectedObject = new Selection();
+			resetCaret();
+			draw();
+		}
+		return false;
 	} else if(key == 8) { // backspace key
 		if(selectedObject != null && 'text' in selectedObject) {
 			selectedObject.text = selectedObject.text.substr(0, selectedObject.text.length - 1);
@@ -284,14 +555,19 @@ document.onkeydown = function(e) {
 		return false;
 	} else if(key == 46) { // delete key
 		if(selectedObject != null) {
-			for(var i = 0; i < nodes.length; i++) {
-				if(nodes[i] == selectedObject) {
-					nodes.splice(i--, 1);
+			if(selectedObject instanceof Selection) {
+				nodes = [];
+				links = [];
+			} else {
+				for(var i = 0; i < nodes.length; i++) {
+					if(nodes[i] == selectedObject) {
+						nodes.splice(i--, 1);
+					}
 				}
-			}
-			for(var i = 0; i < links.length; i++) {
-				if(links[i] == selectedObject || links[i].node == selectedObject || links[i].nodeA == selectedObject || links[i].nodeB == selectedObject) {
-					links.splice(i--, 1);
+				for(var i = 0; i < links.length; i++) {
+					if(links[i] == selectedObject || links[i].node == selectedObject || links[i].nodeA == selectedObject || links[i].nodeB == selectedObject) {
+						links.splice(i--, 1);
+					}
 				}
 			}
 			selectedObject = null;
@@ -355,10 +631,10 @@ function crossBrowserMousePos(e) {
 function crossBrowserRelativeMousePos(e) {
 	var element = crossBrowserElementPos(e);
 	var mouse = crossBrowserMousePos(e);
-	return {
+	return screenToDiagramPoint({
 		'x': mouse.x - element.x,
 		'y': mouse.y - element.y
-	};
+	});
 }
 
 function output(text) {
@@ -367,13 +643,39 @@ function output(text) {
 	element.value = text;
 }
 
+function texDataSnippet(texData) {
+	var start = texData.indexOf('\\definecolor');
+	var endMarker = '\\end{center}';
+	var end = texData.indexOf(endMarker);
+
+	if(start == -1 || end == -1) {
+		return texData;
+	}
+	return texData.substring(start, end + endMarker.length);
+}
+
 function saveAsPNG() {
 	var oldSelectedObject = selectedObject;
 	selectedObject = null;
 	drawUsing(canvas.getContext('2d'));
 	selectedObject = oldSelectedObject;
-	var pngData = canvas.toDataURL('image/png');
-	document.location.href = pngData;
+	draw();
+
+	canvas.toBlob(function(blob) {
+		if(!blob) {
+			alert('Could not save this FSM as a PNG.');
+			return;
+		}
+
+		var url = URL.createObjectURL(blob);
+		var link = document.createElement('a');
+		link.href = url;
+		link.download = 'fsm.png';
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
+	}, 'image/png');
 }
 
 function saveAsSVG() {
@@ -396,4 +698,8 @@ function saveAsLaTeX() {
 	selectedObject = oldSelectedObject;
 	var texData = exporter.toLaTeX();
 	output(texData);
+	var snippet = texDataSnippet(texData);
+	
+	// Copy the text to clipboard
+	navigator.clipboard.writeText(snippet);
 }
