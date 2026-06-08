@@ -114,6 +114,78 @@ var currentLink = null; // a Link
 var movingObject = false;
 var originalClick;
 
+// Event Listeners
+document.addEventListener("DOMContentLoaded", function() {
+	// Toggle Grid
+	const grid = document.getElementById("toggleGrid");
+	if (grid) {grid.addEventListener("change", e => toggleGrid(e.target));}
+
+	// Clear Canvas
+	const clearCanv = document.getElementById("clearCanvasBtn");
+	if (clearCanv) {clearCanv.addEventListener("click", clearCanvas);};
+  	
+	// Restore Backup
+	const restBack = document.getElementById("restoreBackupBtn");
+	if (restBack) {restBack.addEventListener("click", restoreSavedBackup);};
+
+	// Angle Values
+	document.getElementById("selfLinkArrowAngleValue").addEventListener(
+		"click", e => toggleAngleValue(e.target, "selfLinkArrowAngle")
+	);
+	document.getElementById("arrowAngleValue").addEventListener(
+		"click", e => toggleAngleValue(e.target, "arrowAngle")
+	);
+
+	// Arrow Side
+	document.getElementById("arrowAngleValue").addEventListener("click", changeArrowSide);
+
+	// Circle Self Link
+	document.getElementById("circleSelfLink").addEventListener(
+		"change", e => toggleCircle(e.target)
+	);
+
+	const sliders = [
+		"nodeRadius",
+		"arrowLength",
+		"arrowWidth",
+		"arrowAngle",
+		"selfLinkRadiusScale",
+		"selfLinkArrowAngle",
+		"diagramScale",
+		"nodeFillColor"
+	];
+
+	sliders.forEach(setSliderListener);
+
+	// Save As
+	const saveAsTypes = {
+		"savePng": saveAsPNG,
+		"saveSvg": saveAsSVG,
+		"saveLatex": saveAsLaTeX,
+		"saveJson": saveAsJSON
+	};
+
+	for (const [key, fn] of Object.entries(saveAsTypes)) {
+		document.getElementById(key).addEventListener("click", fn);
+	};
+
+	// imports
+	document.getElementById("json-file").addEventListener("change", e => loadFromJSONFile(e.target));
+	document.getElementById("importBtn").addEventListener(
+		"click",
+		function() {
+			document.getElementById("json-file").click();
+		}
+	)
+
+});
+
+function setSliderListener(name) {
+	document.getElementsByName(name).forEach(input => {
+		input.addEventListener("input", e => setScaleValue(e.target));
+	});
+}
+
 function Selection() {
 	this.nodes = nodes.slice();
 	this.links = links.slice();
